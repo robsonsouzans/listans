@@ -400,30 +400,63 @@ const ShoppingApp: React.FC = () => {
         </div>
 
         {/* Groups Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredGroups.map((group) => (
-            <GroupCard
-              key={group.id}
-              group={group}
-              onUpdateGroup={updateGroup}
-              onDeleteGroup={deleteGroup}
-              onAddItem={addItem}
-              onUpdateItem={updateItem}
-              onDeleteItem={deleteItem}
-              onToggleItemPurchased={toggleItemPurchased}
-              calculateGroupTotal={calculateGroupTotal}
-              getPurchasedItemsCount={getPurchasedItemsCount}
-              getProgressPercentage={getProgressPercentage}
-              editingGroup={editingGroup}
-              setEditingGroup={setEditingGroup}
-              newGroup={newGroup}
-              setNewGroup={setNewGroup}
-              expandedGroups={expandedGroups}
-              toggleGroupExpansion={toggleGroupExpansion}
-              getAllUnits={getAllUnits}
-              addCustomUnit={addCustomUnit}
-            />
-          ))}
+        <div className="space-y-6">
+          {/* Active Groups - Full Width */}
+          {filteredGroups
+            .filter(group => expandedGroups.has(group.id))
+            .map((group) => (
+              <div key={`active-${group.id}`} className="w-full">
+                <GroupCard
+                  group={group}
+                  onUpdateGroup={updateGroup}
+                  onDeleteGroup={deleteGroup}
+                  onAddItem={addItem}
+                  onUpdateItem={updateItem}
+                  onDeleteItem={deleteItem}
+                  onToggleItemPurchased={toggleItemPurchased}
+                  calculateGroupTotal={calculateGroupTotal}
+                  getPurchasedItemsCount={getPurchasedItemsCount}
+                  getProgressPercentage={getProgressPercentage}
+                  editingGroup={editingGroup}
+                  setEditingGroup={setEditingGroup}
+                  newGroup={newGroup}
+                  setNewGroup={setNewGroup}
+                  expandedGroups={expandedGroups}
+                  toggleGroupExpansion={toggleGroupExpansion}
+                  getAllUnits={getAllUnits}
+                  addCustomUnit={addCustomUnit}
+                />
+              </div>
+            ))}
+          
+          {/* Inactive Groups - Grid Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredGroups
+              .filter(group => !expandedGroups.has(group.id))
+              .map((group) => (
+              <GroupCard
+                key={group.id}
+                group={group}
+                onUpdateGroup={updateGroup}
+                onDeleteGroup={deleteGroup}
+                onAddItem={addItem}
+                onUpdateItem={updateItem}
+                onDeleteItem={deleteItem}
+                onToggleItemPurchased={toggleItemPurchased}
+                calculateGroupTotal={calculateGroupTotal}
+                getPurchasedItemsCount={getPurchasedItemsCount}
+                getProgressPercentage={getProgressPercentage}
+                editingGroup={editingGroup}
+                setEditingGroup={setEditingGroup}
+                newGroup={newGroup}
+                setNewGroup={setNewGroup}
+                expandedGroups={expandedGroups}
+                toggleGroupExpansion={toggleGroupExpansion}
+                getAllUnits={getAllUnits}
+                addCustomUnit={addCustomUnit}
+              />
+            ))}
+          </div>
         </div>
 
         {filteredGroups.length === 0 && (
@@ -734,14 +767,14 @@ const GroupCard: React.FC<GroupCardProps> = ({
                     <p className={`font-medium ${item.purchased ? 'line-through text-muted-foreground' : ''}`}>
                       {item.name}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {item.quantity} {item.unit} × R$ {item.price.toFixed(2)}
+                    <p className="text-sm text-muted-foreground whitespace-nowrap">
+                      {item.quantity} {item.unit} × <span className="whitespace-nowrap">R$ {item.price.toFixed(2)}</span>
                     </p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="whitespace-nowrap">
                     R$ {(item.quantity * item.price).toFixed(2)}
                   </Badge>
                   <Button 
