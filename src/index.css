@@ -179,6 +179,23 @@ All colors MUST be HSL.
   .animate-scale-in {
     animation: scaleIn 0.2s ease-out;
   }
+
+  /* Dropdown fixes */
+  [data-radix-select-content] {
+    background: hsl(var(--popover)) !important;
+    border: 1px solid hsl(var(--border)) !important;
+    backdrop-filter: blur(20px) !important;
+    z-index: 9999 !important;
+  }
+
+  [data-radix-select-item] {
+    background: transparent !important;
+  }
+
+  [data-radix-select-item]:hover,
+  [data-radix-select-item][data-highlighted] {
+    background: hsl(var(--muted)) !important;
+  }
 }
 
 @keyframes fadeIn {

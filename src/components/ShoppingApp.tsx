@@ -26,7 +26,7 @@ interface ShoppingGroup {
 }
 
 // Unit options
-const UNITS = ['UN', 'KG', 'L', 'G', 'ML', 'M', 'PC'];
+const DEFAULT_UNITS = ['UN', 'KG', 'L', 'G', 'ML', 'M', 'PC', 'CX', 'PAC', 'DZ', 'LT'];
 
 // Color options for groups
 const GROUP_COLORS = [
@@ -44,10 +44,12 @@ const ShoppingApp: React.FC = () => {
   const [editingGroup, setEditingGroup] = useState<ShoppingGroup | null>(null);
   const [newGroup, setNewGroup] = useState({ name: '', color: GROUP_COLORS[0], icon: GROUP_ICONS[0] });
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [customUnits, setCustomUnits] = useState<string[]>([]);
 
   // Load data from localStorage on mount
   useEffect(() => {
     const savedGroups = localStorage.getItem('shopping-groups');
+    const savedCustomUnits = localStorage.getItem('custom-units');
     if (savedGroups) {
       setGroups(JSON.parse(savedGroups));
     } else {
@@ -75,12 +77,20 @@ const ShoppingApp: React.FC = () => {
       ];
       setGroups(sampleGroups);
     }
+    if (savedCustomUnits) {
+      setCustomUnits(JSON.parse(savedCustomUnits));
+    }
   }, []);
 
   // Save to localStorage whenever groups change
   useEffect(() => {
     localStorage.setItem('shopping-groups', JSON.stringify(groups));
   }, [groups]);
+
+  // Save custom units to localStorage
+  useEffect(() => {
+    localStorage.setItem('custom-units', JSON.stringify(customUnits));
+  }, [customUnits]);
 
   // Calculate totals
   const calculateGroupTotal = (group: ShoppingGroup) => {
@@ -89,6 +99,14 @@ const ShoppingApp: React.FC = () => {
 
   const calculateGrandTotal = () => {
     return groups.reduce((total, group) => total + calculateGroupTotal(group), 0);
+  };
+
+  const calculatePurchasedTotal = () => {
+    return groups.reduce((total, group) => {
+      return total + group.items
+        .filter(item => item.purchased)
+        .reduce((groupTotal, item) => groupTotal + (item.quantity * item.price), 0);
+    }, 0);
   };
 
   const getPurchasedItemsCount = (group: ShoppingGroup) => {
@@ -189,6 +207,18 @@ const ShoppingApp: React.FC = () => {
           }
         : group
     ));
+  };
+
+  // Add custom unit
+  const addCustomUnit = (unit: string) => {
+    if (unit && !getAllUnits().includes(unit.toUpperCase())) {
+      setCustomUnits([...customUnits, unit.toUpperCase()]);
+    }
+  };
+
+  // Get all available units
+  const getAllUnits = () => {
+    return [...DEFAULT_UNITS, ...customUnits].sort();
   };
 
   // Toggle group expansion
@@ -303,52 +333,67 @@ const ShoppingApp: React.FC = () => {
           
           {/* Total Geral */}
           <div className="mt-6 p-4 glass-card bg-gradient-to-r from-primary/20 to-accent/20">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3 flex-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Total Geral */}
+              <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/20">
                   <DollarSign className="h-6 w-6 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-lg">Total Geral</h3>
                   <p className="text-sm text-muted-foreground">
-                    {getTotalItemsCount()} itens em {groups.length} grupos
+                    {getTotalItemsCount()} itens total
                   </p>
-                  
-                  {/* Progress Bar */}
-                  <div className="mt-2 mb-1">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                      <span>Progresso das compras</span>
-                      <span>{Math.round(getGlobalProgressPercentage())}%</span>
-                    </div>
-                    <div className="w-full bg-muted/50 rounded-full h-2">
-                      <div 
-                        className="h-2 rounded-full transition-all duration-500 bg-gradient-to-r from-primary to-accent"
-                        style={{ width: `${getGlobalProgressPercentage()}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 mt-2 text-xs">
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-primary"></div>
-                      <span className="text-muted-foreground">
-                        {getTotalPurchasedItemsCount()} comprados
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-muted"></div>
-                      <span className="text-muted-foreground">
-                        {getTotalItemsCount() - getTotalPurchasedItemsCount()} faltando
-                      </span>
-                    </div>
-                  </div>
+                  <p className="text-xl font-bold text-primary">
+                    R$ {calculateGrandTotal().toFixed(2)}
+                  </p>
                 </div>
               </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-2xl sm:text-3xl font-bold text-primary break-words">
-                  R$ {calculateGrandTotal().toFixed(2)}
-                </p>
+
+              {/* Total Comprado */}
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-success/20">
+                  <Check className="h-6 w-6 text-success" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-lg">Total Comprado</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {getTotalPurchasedItemsCount()} itens comprados
+                  </p>
+                  <p className="text-xl font-bold text-success">
+                    R$ {calculatePurchasedTotal().toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
+                <span>Progresso das compras</span>
+                <span>{Math.round(getGlobalProgressPercentage())}%</span>
+              </div>
+              <div className="w-full bg-muted/50 rounded-full h-3">
+                <div 
+                  className="h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-success to-primary"
+                  style={{ width: `${getGlobalProgressPercentage()}%` }}
+                />
+              </div>
+              
+              {/* Stats */}
+              <div className="flex items-center justify-between mt-2 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-success"></div>
+                  <span className="text-muted-foreground">
+                    {getTotalPurchasedItemsCount()} comprados
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full bg-muted"></div>
+                  <span className="text-muted-foreground">
+                    {getTotalItemsCount() - getTotalPurchasedItemsCount()} faltando
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -375,6 +420,8 @@ const ShoppingApp: React.FC = () => {
               setNewGroup={setNewGroup}
               expandedGroups={expandedGroups}
               toggleGroupExpansion={toggleGroupExpansion}
+              getAllUnits={getAllUnits}
+              addCustomUnit={addCustomUnit}
             />
           ))}
         </div>
@@ -417,6 +464,8 @@ interface GroupCardProps {
   setNewGroup: (group: { name: string; color: string; icon: string }) => void;
   expandedGroups: Set<string>;
   toggleGroupExpansion: (groupId: string) => void;
+  getAllUnits: () => string[];
+  addCustomUnit: (unit: string) => void;
 }
 
 const GroupCard: React.FC<GroupCardProps> = ({
@@ -436,8 +485,11 @@ const GroupCard: React.FC<GroupCardProps> = ({
   setNewGroup,
   expandedGroups,
   toggleGroupExpansion,
+  getAllUnits,
+  addCustomUnit,
 }) => {
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const [newItem, setNewItem] = useState({
     name: '',
     unit: 'UN',
@@ -445,14 +497,46 @@ const GroupCard: React.FC<GroupCardProps> = ({
     price: 0,
     purchased: false
   });
+  const [newCustomUnit, setNewCustomUnit] = useState('');
 
   const isExpanded = expandedGroups.has(group.id);
 
   const addItem = () => {
     if (newItem.name.trim()) {
-      onAddItem(group.id, newItem);
+      if (editingItem) {
+        onUpdateItem(group.id, editingItem.id, newItem);
+        setEditingItem(null);
+      } else {
+        onAddItem(group.id, newItem);
+      }
       setNewItem({ name: '', unit: 'UN', quantity: 1, price: 0, purchased: false });
       setIsAddingItem(false);
+    }
+  };
+
+  const startEditItem = (item: ShoppingItem) => {
+    setEditingItem(item);
+    setNewItem({
+      name: item.name,
+      unit: item.unit,
+      quantity: item.quantity,
+      price: item.price,
+      purchased: item.purchased
+    });
+    setIsAddingItem(true);
+  };
+
+  const cancelEdit = () => {
+    setEditingItem(null);
+    setNewItem({ name: '', unit: 'UN', quantity: 1, price: 0, purchased: false });
+    setIsAddingItem(false);
+  };
+
+  const handleAddCustomUnit = () => {
+    if (newCustomUnit.trim()) {
+      addCustomUnit(newCustomUnit.trim());
+      setNewItem({ ...newItem, unit: newCustomUnit.trim().toUpperCase() });
+      setNewCustomUnit('');
     }
   };
 
@@ -547,9 +631,15 @@ const GroupCard: React.FC<GroupCardProps> = ({
       
       {isExpanded && (
         <CardContent className="space-y-3">
-          {/* Add Item Form */}
+          {/* Add/Edit Item Form */}
           {isAddingItem && (
           <div className="space-y-3 p-3 glass-card animate-slide-in">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-medium">
+                {editingItem ? 'Editar Item' : 'Adicionar Item'}
+              </h4>
+            </div>
+            
             <Input
               placeholder="Nome do item"
               value={newItem.name}
@@ -557,23 +647,39 @@ const GroupCard: React.FC<GroupCardProps> = ({
               className="glass-input"
             />
             
-            <div className="grid grid-cols-3 gap-2">
-              <Select value={newItem.unit} onValueChange={(value) => setNewItem({ ...newItem, unit: value })}>
-                <SelectTrigger className="glass-input">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {UNITS.map((unit) => (
-                    <SelectItem key={unit} value={unit}>
-                      {unit}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Select value={newItem.unit} onValueChange={(value) => setNewItem({ ...newItem, unit: value })}>
+                  <SelectTrigger className="glass-input flex-1">
+                    <SelectValue placeholder="Unidade" />
+                  </SelectTrigger>
+                  <SelectContent className="glass-card border-border bg-popover z-50">
+                    {getAllUnits().map((unit) => (
+                      <SelectItem key={unit} value={unit} className="cursor-pointer hover:bg-muted focus:bg-muted">
+                        {unit}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Nova unidade"
+                  value={newCustomUnit}
+                  onChange={(e) => setNewCustomUnit(e.target.value)}
+                  className="glass-input flex-1"
+                />
+                <Button onClick={handleAddCustomUnit} variant="outline" size="sm">
+                  +
+                </Button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
               <Input
                 type="number"
-                placeholder="Qtd"
+                placeholder="Quantidade"
                 value={newItem.quantity}
                 onChange={(e) => setNewItem({ ...newItem, quantity: Number(e.target.value) })}
                 className="glass-input"
@@ -591,9 +697,9 @@ const GroupCard: React.FC<GroupCardProps> = ({
             
             <div className="flex gap-2">
               <Button onClick={addItem} className="gradient-btn-secondary flex-1">
-                Adicionar
+                {editingItem ? 'Salvar' : 'Adicionar'}
               </Button>
-              <Button onClick={() => setIsAddingItem(false)} variant="ghost">
+              <Button onClick={cancelEdit} variant="ghost">
                 Cancelar
               </Button>
             </div>
@@ -638,6 +744,13 @@ const GroupCard: React.FC<GroupCardProps> = ({
                   <Badge variant="secondary">
                     R$ {(item.quantity * item.price).toFixed(2)}
                   </Badge>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => startEditItem(item)}
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="sm"
