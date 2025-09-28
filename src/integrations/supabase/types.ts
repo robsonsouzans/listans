@@ -743,6 +743,186 @@ export type Database = {
           },
         ]
       }
+      lc_compartilhadas: {
+        Row: {
+          created_at: string
+          id: string
+          lista_id: string
+          permissao: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lista_id: string
+          permissao?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lista_id?: string
+          permissao?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lc_compartilhadas_lista_id_fkey"
+            columns: ["lista_id"]
+            isOneToOne: false
+            referencedRelation: "lc_listas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lc_compartilhadas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "lc_usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lc_grupos: {
+        Row: {
+          cor: string
+          created_at: string
+          icone: string
+          id: string
+          lista_id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cor?: string
+          created_at?: string
+          icone?: string
+          id?: string
+          lista_id: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cor?: string
+          created_at?: string
+          icone?: string
+          id?: string
+          lista_id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lc_grupos_lista_id_fkey"
+            columns: ["lista_id"]
+            isOneToOne: false
+            referencedRelation: "lc_listas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lc_listas: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          updated_at: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          updated_at?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lc_listas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "lc_usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lc_produtos: {
+        Row: {
+          comprado: boolean
+          created_at: string
+          grupo_id: string
+          id: string
+          nome: string
+          preco: number
+          quantidade: number
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          comprado?: boolean
+          created_at?: string
+          grupo_id: string
+          id?: string
+          nome: string
+          preco?: number
+          quantidade?: number
+          unidade?: string
+          updated_at?: string
+        }
+        Update: {
+          comprado?: boolean
+          created_at?: string
+          grupo_id?: string
+          id?: string
+          nome?: string
+          preco?: number
+          quantidade?: number
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lc_produtos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "lc_grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lc_usuarios: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          senha: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          senha: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          senha?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketplace_configuracoes: {
         Row: {
           api_key: string | null
@@ -1125,6 +1305,10 @@ export type Database = {
         Args: { senha_texto: string }
         Returns: string
       }
+      criptografar_senha_lc: {
+        Args: { senha_texto: string }
+        Returns: string
+      }
       gerar_codigo_rastreamento: {
         Args: { transportadora_param: string }
         Returns: string
@@ -1132,6 +1316,14 @@ export type Database = {
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      verificar_login_lc: {
+        Args: { email_input: string; senha_input: string }
+        Returns: {
+          email: string
+          nome: string
+          usuario_id: string
+        }[]
       }
       verificar_senha: {
         Args: { email_input: string; senha_input: string }
