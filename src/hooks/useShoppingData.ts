@@ -39,9 +39,9 @@ export const useShoppingData = () => {
 
   // Carregar listas do usuário
   const loadLists = async () => {
-    if (!user?.usuario_id && !user?.id) return;
+    if (!user?.usuario_id) return;
     
-    const userId = user.usuario_id || user.id;
+    const userId = user.usuario_id;
 
     try {
       const { data, error } = await supabase
@@ -71,9 +71,9 @@ export const useShoppingData = () => {
 
   // Criar lista padrão
   const createDefaultList = async () => {
-    if (!user?.usuario_id && !user?.id) return;
+    if (!user?.usuario_id) return;
     
-    const userId = user.usuario_id || user.id;
+    const userId = user.usuario_id;
 
     try {
       const { data, error } = await supabase
@@ -291,7 +291,7 @@ export const useShoppingData = () => {
   };
 
   useEffect(() => {
-    if (user?.usuario_id || user?.id) {
+    if (user?.usuario_id) {
       loadLists();
     }
   }, [user]);
