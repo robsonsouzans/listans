@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, EyeOff, ShoppingCart } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginForm, setLoginForm] = useState({
     email: '',
     password: ''
@@ -40,8 +41,13 @@ const Auth = () => {
 
       if (data && data.length > 0) {
         const user = data[0];
-        // Salvar dados do usuário no localStorage para controle de sessão
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        // Normalizar e salvar dados do usuário no localStorage
+        const sessionUser = {
+          usuario_id: user.usuario_id,
+          nome: user.nome,
+          email: user.email,
+        };
+        localStorage.setItem('currentUser', JSON.stringify(sessionUser));
         toast({
           title: "Login realizado com sucesso!",
           description: `Bem-vindo(a), ${user.nome}!`,
@@ -121,8 +127,13 @@ const Auth = () => {
         return;
       }
 
-      // Salvar dados do usuário
-      localStorage.setItem('currentUser', JSON.stringify(data));
+      // Salvar dados do usuário normalizados
+      const sessionUser = {
+        usuario_id: data.id,
+        nome: data.nome,
+        email: data.email,
+      };
+      localStorage.setItem('currentUser', JSON.stringify(sessionUser));
       
       toast({
         title: "Cadastro realizado com sucesso!",
@@ -143,171 +154,230 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-4">
-            <ShoppingCart className="w-8 h-8 text-white" />
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Background gaming image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiB2aWV3Qm94PSIwIDAgMTkyMCAxMDgwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8ZGVmcz4KPHN0eWxlPgouY2xzLTF7ZmlsbDojMjEyOTM3O30KLmNscy0ye2ZpbGw6IzM3NEE2Qjt9Ci5jbHMtM3tmaWxsOiM0NDU0NzE7fQouY2xzLTR7ZmlsbDojNTY2QTg1O30KLmNscy01e2ZpbGw6IzY4N0FCQjt9Ci5jbHMtNntmaWxsOiM3QzhDRjU7fQo8L3N0eWxlPgo8L2RlZnM+CjxyZWN0IGNsYXNzPSJjbHMtMSIgd2lkdGg9IjE5MjAiIGhlaWdodD0iMTA4MCIvPgo8cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMCwwIDE5MjAsMCAxOTIwLDU0MCA5NjAsNTQwIDAsNTQwIi8+Cjxwb2x5Z29uIGNsYXNzPSJjbHMtMyIgcG9pbnRzPSIwLDU0MCA5NjAsNTQwIDE5MjAsNTQwIDE5MjAsMTA4MCA5NjAsMTA4MCA0ODAsMTA4MCA0ODAsMTA4MCAyNDAsMTA4MCA5NiwxMDgwIDAsNTQwIi8+CjxjaXJjbGUgY2xhc3M9ImNscy00IiBjeD0iNDgwIiBjeT0iMjcwIiByPSIxMjAiLz4KPGNpcmNsZSBjbGFzcz0iY2xzLTUiIGN4PSIxNDQwIiBjeT0iODEwIiByPSI5MCIvPgo8Y2lyY2xlIGNsYXNzPSJjbHMtNiIgY3g9IjE0NDAiIGN5PSI4MTAiIHI9IjQwIi8+CjxjaXJjbGUgY2xhc3M9ImNscy01IiBjeD0iMjQwIiBjeT0iODEwIiByPSI2MCIvPgo8L3N2Zz4=')`
+        }}
+      />
+      
+      {/* Purple gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 via-indigo-900/80 to-purple-800/90" />
+      
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          {/* Title and subtitle */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2 tracking-wide">Lista de Compras</h1>
+            <p className="text-purple-200 text-lg">Organize suas compras de forma inteligente</p>
+            <p className="text-purple-300/80 text-sm mt-1">[Pressione Enter para começar a organizar]</p>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Lista de Compras</h1>
-          <p className="text-purple-100">Organize suas compras de forma inteligente</p>
+
+          <Card className="bg-black/40 backdrop-blur-lg border border-purple-500/20 shadow-2xl">
+            <CardContent className="p-8">
+              <Tabs defaultValue="login" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 bg-black/30 border border-purple-500/30">
+                  <TabsTrigger 
+                    value="login" 
+                    className="text-purple-200 data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                  >
+                    Entrar
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="signup"
+                    className="text-purple-200 data-[state=active]:bg-purple-600 data-[state=active]:text-white"
+                  >
+                    Cadastrar
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="login" className="mt-6">
+                  <form onSubmit={handleLogin} className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                        <Input
+                          type="email"
+                          value={loginForm.email}
+                          onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                          placeholder="Email address"
+                          required
+                          disabled={isLoading}
+                          className="pl-11 bg-black/50 border-purple-500/30 text-white placeholder:text-purple-300/60 focus:border-purple-400 focus:ring-purple-400/20"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={loginForm.password}
+                          onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                          placeholder="Password"
+                          required
+                          disabled={isLoading}
+                          className="pl-11 pr-11 bg-black/50 border-purple-500/30 text-white placeholder:text-purple-300/60 focus:border-purple-400 focus:ring-purple-400/20"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-purple-400 hover:text-purple-300"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isLoading}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setRememberMe(!rememberMe)}
+                          className="flex items-center space-x-2 text-purple-300 hover:text-purple-200 transition-colors"
+                        >
+                          <div className={`w-4 h-4 rounded border ${rememberMe ? 'bg-purple-600 border-purple-600' : 'border-purple-400'} flex items-center justify-center`}>
+                            {rememberMe && <Check className="w-3 h-3 text-white" />}
+                          </div>
+                          <span className="text-sm">Remember me</span>
+                        </button>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="text-purple-300 hover:text-purple-200 p-0 h-auto text-sm"
+                      >
+                        Forgot password?
+                      </Button>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Entrando..." : "Entrar"}
+                    </Button>
+
+                    <div className="text-center">
+                      <p className="text-purple-300 text-sm mb-4">quick access via</p>
+                      <div className="flex justify-center space-x-4">
+                        <Button variant="ghost" size="sm" className="text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-400/50">
+                          ⚔️
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-400/50">
+                          🎮
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-purple-300 hover:text-purple-200 border border-purple-500/30 hover:border-purple-400/50">
+                          🏆
+                        </Button>
+                      </div>
+                    </div>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup" className="mt-6">
+                  <form onSubmit={handleSignup} className="space-y-6">
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                        <Input
+                          type="text"
+                          value={signupForm.name}
+                          onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
+                          placeholder="Nome completo"
+                          required
+                          disabled={isLoading}
+                          className="pl-11 bg-black/50 border-purple-500/30 text-white placeholder:text-purple-300/60 focus:border-purple-400 focus:ring-purple-400/20"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                        <Input
+                          type="email"
+                          value={signupForm.email}
+                          onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                          placeholder="Email address"
+                          required
+                          disabled={isLoading}
+                          className="pl-11 bg-black/50 border-purple-500/30 text-white placeholder:text-purple-300/60 focus:border-purple-400 focus:ring-purple-400/20"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={signupForm.password}
+                          onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                          placeholder="Password (min. 6 caracteres)"
+                          required
+                          disabled={isLoading}
+                          minLength={6}
+                          className="pl-11 pr-11 bg-black/50 border-purple-500/30 text-white placeholder:text-purple-300/60 focus:border-purple-400 focus:ring-purple-400/20"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-purple-400 hover:text-purple-300"
+                          onClick={() => setShowPassword(!showPassword)}
+                          disabled={isLoading}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={signupForm.confirmPassword}
+                          onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
+                          placeholder="Confirm password"
+                          required
+                          disabled={isLoading}
+                          className="pl-11 bg-black/50 border-purple-500/30 text-white placeholder:text-purple-300/60 focus:border-purple-400 focus:ring-purple-400/20"
+                        />
+                      </div>
+                    </div>
+
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg" 
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Cadastrando..." : "Create Account"}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+
+              {/* Don't have account link for login tab */}
+              <div className="text-center mt-6">
+                <p className="text-purple-300 text-sm">
+                  Não tem uma conta?{' '}
+                  <Button variant="link" className="text-purple-400 hover:text-purple-300 p-0 h-auto text-sm">
+                    Create Account
+                  </Button>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-
-        <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
-          <CardHeader className="space-y-1">
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Entrar</TabsTrigger>
-                <TabsTrigger value="signup">Cadastrar</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <CardTitle className="text-2xl text-center">Entrar</CardTitle>
-                <CardDescription className="text-center">
-                  Entre com sua conta para acessar suas listas
-                </CardDescription>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <CardTitle className="text-2xl text-center">Cadastrar</CardTitle>
-                <CardDescription className="text-center">
-                  Crie sua conta para começar a usar
-                </CardDescription>
-              </TabsContent>
-            </Tabs>
-          </CardHeader>
-
-          <CardContent>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsContent value="login">
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={loginForm.email}
-                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                      placeholder="seu@email.com"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="password"
-                        type={showPassword ? "text" : "password"}
-                        value={loginForm.password}
-                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                        placeholder="Sua senha"
-                        required
-                        disabled={isLoading}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={isLoading}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Entrando..." : "Entrar"}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome completo</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={signupForm.name}
-                      onChange={(e) => setSignupForm({ ...signupForm, name: e.target.value })}
-                      placeholder="Seu nome completo"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      value={signupForm.email}
-                      onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
-                      placeholder="seu@email.com"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        type={showPassword ? "text" : "password"}
-                        value={signupForm.password}
-                        onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
-                        placeholder="Mínimo 6 caracteres"
-                        required
-                        disabled={isLoading}
-                        minLength={6}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                        disabled={isLoading}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Confirmar senha</Label>
-                    <Input
-                      id="confirm-password"
-                      type={showPassword ? "text" : "password"}
-                      value={signupForm.confirmPassword}
-                      onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
-                      placeholder="Confirme sua senha"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Cadastrando..." : "Cadastrar"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
