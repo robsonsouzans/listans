@@ -1293,6 +1293,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cadastrar_usuario_lc: {
+        Args: { email_input: string; nome_input: string; senha_input: string }
+        Returns: {
+          email: string
+          nome: string
+          usuario_id: string
+        }[]
+      }
       create_outbox_event: {
         Args: {
           p_aggregate_id: string

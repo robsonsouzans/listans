@@ -96,50 +96,39 @@ const Auth = () => {
     setIsLoading(true);
 
     try {
-      // Criptografar a senha
-      const { data: hashedPassword, error: hashError } = await supabase.rpc('criptografar_senha_lc', {
-        senha_texto: signupForm.password
+      const { data, error } = await supabase.rpc('cadastrar_usuario_lc', {
+        nome_input: signupForm.name,
+        email_input: signupForm.email,
+        senha_input: signupForm.password,
       });
 
-      if (hashError) throw hashError;
-
-      // Inserir usuário
-      const { data, error } = await supabase
-        .from('lc_usuarios')
-        .insert([{
-          nome: signupForm.name,
-          email: signupForm.email,
-          senha: hashedPassword
-        }])
-        .select('id, nome, email')
-        .single();
-
       if (error) {
-        if (error.code === '23505') {
+        if (error.message?.includes('EMAIL_JA_EXISTE') || error.code === '23505') {
           toast({
             title: "Erro no cadastro",
             description: "Este email já está em uso.",
             variant: "destructive",
           });
-        } else {
-          throw error;
+          return;
         }
-        return;
+        throw error;
       }
 
-      // Salvar dados do usuário normalizados
+      const user = data?.[0];
+      if (!user) throw new Error('Cadastro não retornou usuário');
+
       const sessionUser = {
-        usuario_id: data.id,
-        nome: data.nome,
-        email: data.email,
+        usuario_id: user.usuario_id,
+        nome: user.nome,
+        email: user.email,
       };
       localStorage.setItem('currentUser', JSON.stringify(sessionUser));
-      
+
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: `Bem-vindo(a), ${data.nome}!`,
+        description: `Bem-vindo(a), ${user.nome}!`,
       });
-      
+
       navigate('/');
     } catch (error) {
       console.error('Erro no cadastro:', error);
